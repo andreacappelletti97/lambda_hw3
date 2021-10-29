@@ -17,7 +17,7 @@ Resources:
       Description: Function to check the presence of the log given a timestamp
       Runtime: java8
       Handler: lambda.ApiGatewayProxyHandler
-      CodeUri: target/scala-2.12/acappe2_hw3.jar
+      CodeUri: target/scala-3.0.2/acappe2_hw3.jar
       MemorySize: 512
       Timeout: 15
       Environment:
