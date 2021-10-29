@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Transform: AWS::Serverless-2016-10-31
+
+Description: >-
+  Lambda functions template to run locally with SAM-CLI and ready deploy on AWS
+
+Resources:
+  CheckLogPresenceFunction:
+    Type: AWS::Serverless::Function
+    package:
+      individually: true
+      exclude:
+        - aws-java-sdk
+    Properties:
+      FunctionName: CheckLogPresence
+      Description: Function to check the presence of the log given a timestamp
+      Runtime: java8
+      Handler: lambda.ApiGatewayProxyHandler
+      CodeUri: target/scala-2.12/acappe2_hw3.jar
+      MemorySize: 512
+      Timeout: 15
+      Environment:
+        Variables:
+          env: staging
+      Events:
+        Hello:
+          Type: Api
+          Properties:
+            Path: /checkLogPresence/{time}/{delta}
+            Method: GET
+
+Outputs:
+  ApiURL:
+    Description: "API endpoint production environment URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/checkLogPresence/15:55:27.596/10"
