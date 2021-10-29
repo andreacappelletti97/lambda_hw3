@@ -12,11 +12,12 @@ import scala.io.Source
 import scala.collection.JavaConverters._
 import scala.collection.Searching._
 import scala.collection.mutable.ArrayBuffer
+import java.security.MessageDigest
 
-class CheckLogPresenceFunction
+class GetLogMessages
 
-object CheckLogPresenceFunction {
-  val logger = CreateLogger(classOf[CheckLogPresenceFunction])
+object GetLogMessages {
+  val logger = CreateLogger(classOf[GetLogMessages])
   val config = ObtainConfigReference("config") match {
     case Some(value) => value
     case None => throw new RuntimeException("Cannot obtain a reference to the config data.")
@@ -37,11 +38,28 @@ object CheckLogPresenceFunction {
       logTimeStampBuffer += token.toString.split(" ")(0))
     //Cast the array buffer to array
     val logTimeStampArray = logTimeStampBuffer.toArray
-    deltaHandler(logTimeStampArray, time, delta)
-    val result = binarySearchTime(logTimeStampArray, time)
+    val deltaDetected = deltaHandler(logTimeStampArray, time, delta)
+    val finalResponse = ArrayBuffer[String]()
+    deltaDetected.foreach{
+      timeDetected => logFile.foreach(
+        logMessage => if(logMessage.contains(timeDetected)){
+          finalResponse += md5HashString(logMessage.toString)
+        }
+      )
+    }
     //Return result
     logger.info("Returning results...")
-    Response(result.toString, Map("Content-Type" -> "text/plain"))
+    Response(finalResponse.toArray.mkString(","), Map("Content-Type" -> "text/plain"))
+  }
+
+  def md5HashString(s: String): String = {
+    import java.security.MessageDigest
+    import java.math.BigInteger
+    val md = MessageDigest.getInstance("MD5")
+    val digest = md.digest(s.getBytes)
+    val bigInt = new BigInteger(1,digest)
+    val hashedString = bigInt.toString(16)
+    hashedString
   }
 
   def formatAdapter(time : String): String ={
@@ -52,7 +70,8 @@ object CheckLogPresenceFunction {
     }
   }
 
-  def deltaHandler(timeArray: Array[String], time : String, delta: String): Unit ={
+  def deltaHandler(timeArray: Array[String], time : String, delta: String): Array[String] ={
+    val timeBuffer = ArrayBuffer[String]()
     //Split the delta into hours, minutes, seconds, millis
     val deltaHours = Integer.parseInt(delta.split(":")(0))
     val deltaMinutes = Integer.parseInt(delta.split(":")(1))
@@ -75,26 +94,56 @@ object CheckLogPresenceFunction {
     //Millis
     val millisIncrement = timeMillis + deltaMillis
     val millisDecrement = timeMillis - deltaMillis
+    //Compute increments and decrements
+    val hoursIncremented = formatAdapter(hoursIncrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val hoursDecremented = formatAdapter(hoursDecrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val minutesIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(minutesIncrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val minutesDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(minutesDecrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val secondsIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsIncrement.toString)  +"."+ formatAdapter(timeMillis.toString)
+    val secondsDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsDecrement.toString) +"."+ formatAdapter(timeMillis.toString)
+    val millisIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisIncrement.toString)
+    val millisDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisDecrement.toString)
 
+    //Check if the current timestamp is present
+    if(binarySearchTime(timeArray, time)){
+      timeBuffer += time
+    }
     //Increment hours with delta
-    binarySearchTime(timeArray, formatAdapter(hoursIncrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaHours!=0 && binarySearchTime(timeArray, hoursIncremented)){
+      timeBuffer += hoursIncremented
+    }
     //Decrement hours with delta
-    binarySearchTime(timeArray, formatAdapter(hoursDecrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaHours!=0 && binarySearchTime(timeArray, hoursDecremented)){
+      timeBuffer += hoursDecremented
+    }
     //Increment minutes with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(minutesIncrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaMinutes!=0 && binarySearchTime(timeArray, minutesIncremented)){
+      timeBuffer += minutesIncremented
+    }
     //Decrement minutes with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(minutesDecrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaMinutes!=0 && binarySearchTime(timeArray, minutesDecremented)){
+      timeBuffer += minutesDecremented
+    }
     //Increment seconds with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsIncrement.toString)  +"."+ formatAdapter(timeMillis.toString))
+    if(deltaSeconds!=0 && binarySearchTime(timeArray, secondsIncremented)){
+      timeBuffer += secondsIncremented
+    }
     //Decrement seconds with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsDecrement.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaSeconds!=0 && binarySearchTime(timeArray, secondsDecremented)){
+      timeBuffer += secondsDecremented
+    }
     //Increment millis with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisIncrement.toString))
+    if(deltaMillis!=0 && binarySearchTime(timeArray, millisIncremented)){
+      timeBuffer += millisIncremented
+    }
     //Decrement millis with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisDecrement.toString))
-
+    if(deltaMillis!=0 && binarySearchTime(timeArray, millisDecremented)){
+      timeBuffer += millisDecremented
+    }
+      val timeFoundArray = timeBuffer.toArray
+      timeFoundArray.foreach(token => System.out.println(token))
+    return timeBuffer.toArray
   }
-
 
   //This function performs a binary search into the time of the logs data, the times are already oredered
   //https://github.com/scala/scala/blob/v2.11.0-M3/src/library/scala/collection/Searching.scala
@@ -138,6 +187,7 @@ object CheckLogPresenceFunction {
     logger.info("Return response...")
     def javaHeaders: java.util.Map[String, String] = headers.asJava
   }
+
 
 }
 

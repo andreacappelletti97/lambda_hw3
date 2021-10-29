@@ -38,6 +38,13 @@ public class ApiGatewayProxyHandler implements RequestHandler<APIGatewayProxyReq
                     .withBody(response.body())
                     .withStatusCode(response.statusCode())
                     .withHeaders(response.javaHeaders());
+        } else if(requestEvent.getPath().contains("getLogMessages")){
+            System.out.println("Check log presence function is called");
+            GetLogMessages.Response response = GetLogMessages.handle(requestEvent, context);
+            return new APIGatewayProxyResponseEvent()
+                    .withBody(response.body())
+                    .withStatusCode(response.statusCode())
+                    .withHeaders(response.javaHeaders());
         }
 
         Map<String, String> headersMap  = new HashMap<String, String>() {{
