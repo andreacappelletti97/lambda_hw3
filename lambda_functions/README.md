@@ -1,6 +1,44 @@
 # Homework 3
 
+## Install Java
 
+# remove old Bintray repo file
+```shell
+File contains no section headers. file: file:///etc/yum.repos.d/bintray-sbt-rpm.repo
+```
+
+Solution
+```shell
+rm /etc/yum.repos.d/bintray-sbt-rpm.repo
+```
+Install Java
+
+```shell
+sudo yum install java-1.8.0-openjdk
+```
+Install Scala
+
+```shell
+wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.rpm
+yum install scala-2.11.8.rpm
+```
+Install sbt
+```shell
+curl -L https://www.scala-sbt.org/sbt-rpm.repo > sbt-rpm.repo
+sudo mv sbt-rpm.repo /etc/yum.repos.d/
+sudo yum install sbt
+```
+
+Configure AWS credentials
+```shell
+aws configure
+```
+```shell
+AWS Access Key ID [None]: Your key
+AWS Secret Access Key [None]: Your key
+Default region name [None]: us-west-1
+Default output format [None]: json
+```
 ## Run locally
 
 Before running our APIs locally we have to install Docker
