@@ -66,7 +66,6 @@ object GenerateLogData:
     val region = config.getString("randomLogGenerator.s3.region")
     //Init s3 amazon
     val s3 = AmazonS3ClientBuilder.standard()
-     // .withCredentials(new AWSStaticCredentialsProvider(creds))
       .withRegion(region) // The first region to try your request against
       .build();
 
@@ -77,7 +76,6 @@ object GenerateLogData:
       case e: AmazonServiceException =>
         logger.error("ERROR S3")
         logger.error(e.getErrorMessage)
-      //System.exit(1)
     }
     Thread.sleep(config.getLong("randomLogGenerator.s3.timePeriod")) // wait for timePeriod millisecond
     //Recursive call

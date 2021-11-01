@@ -16,10 +16,10 @@ Resources:
       FunctionName: CheckLogPresence
       Description: Function to check the presence of the log given a timestamp
       Runtime: java8
-      Handler: lambda.ApiGatewayProxyHandler
+      Handler: proxy.ApiGatewayProxyHandler
       CodeUri: target/scala-3.0.2/acappe2_hw3.jar
       MemorySize: 512
-      Timeout: 15
+      Timeout: 50
       Environment:
         Variables:
           env: staging
@@ -39,10 +39,10 @@ Resources:
       FunctionName: GetLogMessages
       Description: Function to check the presence of the log given a timestamp and return MD5 log message
       Runtime: java8
-      Handler: lambda.ApiGatewayProxyHandler
+      Handler: proxy.ApiGatewayProxyHandler
       CodeUri: target/scala-3.0.2/acappe2_hw3.jar
       MemorySize: 512
-      Timeout: 15
+      Timeout: 50
       Environment:
         Variables:
           env: staging
@@ -52,29 +52,7 @@ Resources:
           Properties:
             Path: /getLogMessages/{time}/{delta}
             Method: GET
-  ApiHandleFunction:
-    Type: AWS::Serverless::Function
-    package:
-      individually: true
-      exclude:
-        - aws-java-sdk
-    Properties:
-      FunctionName: ApiHandleFunction
-      Description: Function to check the presence of the log given a timestamp and return MD5 log message
-      Runtime: java8
-      Handler: lambda.ApiGatewayProxyHandler
-      CodeUri: target/scala-3.0.2/acappe2_hw3.jar
-      MemorySize: 512
-      Timeout: 15
-      Environment:
-        Variables:
-          env: staging
-      Events:
-        Hello:
-          Type: Api
-          Properties:
-            Path: /
-            Method: GET
+
 Outputs:
   ApiURL:
     Description: "API endpoint production environment URL"

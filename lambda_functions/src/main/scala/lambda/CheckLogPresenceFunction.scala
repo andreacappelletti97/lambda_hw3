@@ -12,6 +12,8 @@ import scala.io.Source
 import scala.collection.JavaConverters._
 import scala.collection.Searching._
 import scala.collection.mutable.ArrayBuffer
+import org.json4s.DefaultFormats
+import org.json4s.native.Serialization.write
 
 class CheckLogPresenceFunction
 
@@ -22,9 +24,11 @@ object CheckLogPresenceFunction {
     case None => throw new RuntimeException("Cannot obtain a reference to the config data.")
   }
 
+  private val semiColon = config.getString("config.api.semiColon")
+  private val newLine = config.getString("config.api.newLine")
+  private val dot = config.getString("config.api.dot")
+
   def handle(request: APIGatewayProxyRequestEvent, context: Context): Response = {
-    logger.info("handling %s %s, remaining time is %d ms".format(request.getHttpMethod, request.getPath, context.getRemainingTimeInMillis))
-    logger.info(s"""environment = ${sys.env.getOrElse("env", "n/a")}""")
     //Get params from the get request
     val time = request.getPathParameters.get("time")
     val delta = request.getPathParameters.get("delta")
@@ -38,30 +42,34 @@ object CheckLogPresenceFunction {
     //Cast the array buffer to array
     val logTimeStampArray = logTimeStampBuffer.toArray
     val result = deltaHandler(logTimeStampArray, time, delta)
+    val jsonResponse = JsonResponse(result)
+    implicit val formats: DefaultFormats = DefaultFormats
+    val jsonString = write(jsonResponse)
     //Return result
     logger.info("Returning results...")
-    Response(result.toString, Map("Content-Type" -> "text/plain"))
+    Response(jsonString, Map(config.getString("config.api.contentType") -> config.getString("config.api.responseType")))
   }
 
+  //Adapt the format of the time in order to search for deltas
   def formatAdapter(time : String): String ={
     if(time.size == 1) {
-      return "0" + time
+      return config.getString("config.api.format") + time
     } else {
       return time
     }
   }
-
+  //Look for deltas and time, return the true or false
   def deltaHandler(timeArray: Array[String], time : String, delta: String): Boolean = {
     //Split the delta into hours, minutes, seconds, millis
-    val deltaHours = Integer.parseInt(delta.split(":")(0))
-    val deltaMinutes = Integer.parseInt(delta.split(":")(1))
-    val deltaSeconds = Integer.parseInt((delta.split(":")(2)).split("\\.")(0))
-    val deltaMillis = Integer.parseInt(delta.split("\\.")(1))
+    val deltaHours = Integer.parseInt(delta.split(semiColon)(0))
+    val deltaMinutes = Integer.parseInt(delta.split(semiColon)(1))
+    val deltaSeconds = Integer.parseInt((delta.split(semiColon)(2)).split(newLine)(0))
+    val deltaMillis = Integer.parseInt(delta.split(newLine)(1))
     //Split the time into hours, minutes, seconds, millis
-    val timeHours = Integer.parseInt(time.split(":")(0))
-    val timeMinutes = Integer.parseInt(time.split(":")(1))
-    val timeSeconds = Integer.parseInt(time.split(":")(2).split("\\.")(0))
-    val timeMillis = Integer.parseInt(time.split("\\.")(1))
+    val timeHours = Integer.parseInt(time.split(semiColon)(0))
+    val timeMinutes = Integer.parseInt(time.split(semiColon)(1))
+    val timeSeconds = Integer.parseInt(time.split(semiColon)(2).split(newLine)(0))
+    val timeMillis = Integer.parseInt(time.split(newLine)(1))
     //Hours
     val hoursIncrement = timeHours + deltaHours
     val hoursDecrement = timeHours - deltaHours
@@ -75,14 +83,14 @@ object CheckLogPresenceFunction {
     val millisIncrement = timeMillis + deltaMillis
     val millisDecrement = timeMillis - deltaMillis
     //Compute increments and decrements
-    val hoursIncremented = formatAdapter(hoursIncrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
-    val hoursDecremented = formatAdapter(hoursDecrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
-    val minutesIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(minutesIncrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
-    val minutesDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(minutesDecrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
-    val secondsIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsIncrement.toString)  +"."+ formatAdapter(timeMillis.toString)
-    val secondsDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsDecrement.toString) +"."+ formatAdapter(timeMillis.toString)
-    val millisIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisIncrement.toString)
-    val millisDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisDecrement.toString)
+    val hoursIncremented = formatAdapter(hoursIncrement.toString)+semiColon +formatAdapter(timeMinutes.toString)+ semiColon +formatAdapter(timeSeconds.toString) +dot+ formatAdapter(timeMillis.toString)
+    val hoursDecremented = formatAdapter(hoursDecrement.toString)+semiColon +formatAdapter(timeMinutes.toString)+ semiColon +formatAdapter(timeSeconds.toString) +dot+ formatAdapter(timeMillis.toString)
+    val minutesIncremented = formatAdapter(timeHours.toString)+semiColon +formatAdapter(minutesIncrement.toString)+ semiColon +formatAdapter(timeSeconds.toString) +dot+ formatAdapter(timeMillis.toString)
+    val minutesDecremented = formatAdapter(timeHours.toString)+semiColon +formatAdapter(minutesDecrement.toString)+ semiColon +formatAdapter(timeSeconds.toString) +dot+ formatAdapter(timeMillis.toString)
+    val secondsIncremented = formatAdapter(timeHours.toString)+semiColon +formatAdapter(timeMinutes.toString)+ semiColon +formatAdapter(secondsIncrement.toString)  +dot+ formatAdapter(timeMillis.toString)
+    val secondsDecremented = formatAdapter(timeHours.toString)+semiColon +formatAdapter(timeMinutes.toString)+ semiColon +formatAdapter(secondsDecrement.toString) +dot+ formatAdapter(timeMillis.toString)
+    val millisIncremented = formatAdapter(timeHours.toString)+semiColon +formatAdapter(timeMinutes.toString)+ semiColon +formatAdapter(timeSeconds.toString) +dot+ formatAdapter(millisIncrement.toString)
+    val millisDecremented = formatAdapter(timeHours.toString)+semiColon +formatAdapter(timeMinutes.toString)+ semiColon +formatAdapter(timeSeconds.toString) +dot+ formatAdapter(millisDecrement.toString)
 
     //Check if the current timestamp is present
     if(binarySearchTime(timeArray, time)){
@@ -161,8 +169,11 @@ object CheckLogPresenceFunction {
     myArray
   }
 
+  //Reponse in Json encoding
+  case class JsonResponse(found: Boolean)
+
   //Class to build the response code
-  case class Response(body: String, headers: Map[String,String], statusCode: Int = 200) {
+  case class Response(body: String, headers: Map[String,String], statusCode: Int = config.getInt("config.api.successStatusCode")) {
     logger.info("Return response...")
     def javaHeaders: java.util.Map[String, String] = headers.asJava
   }

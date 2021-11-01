@@ -21,6 +21,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-lambda-java-events" % "2.2.6",
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
   "com.amazonaws" % "aws-java-sdk-s3" % "1.11.46",
+  "org.json4s" %% "json4s-native" % "4.0.3",
   "ch.qos.logback" % "logback-core" % logbackVersion,
   "ch.qos.logback" % "logback-classic" % logbackVersion,
   "org.slf4j" % "slf4j-api" % sfl4sVersion,
