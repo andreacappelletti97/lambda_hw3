@@ -1,44 +1,106 @@
 # Homework 3
+### The goal of this homework is for students to gain experience with solving a distributed computational problem using cloud computing technologies by designing and implementing a RESTful service and a lambda function that are accessed from clients using gRPC.
+### Grade: 8%
 
-## Install Java
+## Author
+Andrea Cappelletti  
+UIN: 674197701   
+acappe2@uic.edu
 
-# remove old Bintray repo file
+This repository is organized into three different subprojects.
+
+- logGenerator
+- lambda_functions
+- gRpc
+
+The following sections describe the functionalities implemented in all of them.
+
+# logGenerator
+
+The first project, logGenerator, provides an extension of the log generator coded by Professor Mark.
+The goal of this extension is to periodically upload the logs into a S3 bucket on AWS S3.
+In order to do so, an async thread is started at the beginning of the generation.
+The thread takes all the logs into the directory <code>/log</code> and upload them.
+We can modify the timePeriod and all the parameters from the <code>application.conf</code> file. 
+Please refer to that file in order to discover more information about the overall functionalities and change the parameters accordling to your needs.
+
+To run the logGenerator on a EC2 instance follow the steps described below.
+First thing first, log into your AWS console and start a Linux EC2 instance.
+In order to do that, select launch instance and select <code>Amazon Linux 2 AMI (HVM), SSD Volume Type - ami-03ab7423a204da002 (64-bit x86) / ami-0fb4cfafeead46a44 (64-bit Arm)</code>
+Select <code>64-bit (x86)</code> and then <code>t2.micro</code>.
+Make sure that SSH is enabled under security groups <code>SSH TCP 22 0.0.0.0/0 </code> and add your keypair when asked.
+Now you should be able to login into your EC2 instance via SSH
+
+In order to do so, run the command
+
 ```shell
-File contains no section headers. file: file:///etc/yum.repos.d/bintray-sbt-rpm.repo
+ssh -i "linux.pem" ec2-user@ec2-54-241-68-63.us-west-1.compute.amazonaws.com
 ```
 
-Solution
-```shell
-rm /etc/yum.repos.d/bintray-sbt-rpm.repo
-```
-Install Java
+Where <code>linux.pem</code> is the name of your key and <code>ec2-user@ec2-54-241-68-63.us-west-1.compute.amazonaws.com</code> is the address of your instance.
+
+Once you log in into your instance, in order to run the logGenerator you have to install
+- Java SDK 8
+- Scala
+- SBT
+
+### Install Java
+
+To install Java, run the following command
 
 ```shell
 sudo yum install java-1.8.0-openjdk
 ```
-Install Scala
+You may encounter the following error while running yum
+```shell
+File contains no section headers. file: file:///etc/yum.repos.d/bintray-sbt-rpm.repo
+```
+If you encounter that error, run 
+Solution
+```shell
+rm /etc/yum.repos.d/bintray-sbt-rpm.repo
+```
+In order to solve it, the go ahed and install Scala and SBT
+
+### Install Scala
 
 ```shell
 wget http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.rpm
 yum install scala-2.11.8.rpm
 ```
-Install sbt
+### Install sbt
 ```shell
 curl -L https://www.scala-sbt.org/sbt-rpm.repo > sbt-rpm.repo
 sudo mv sbt-rpm.repo /etc/yum.repos.d/
 sudo yum install sbt
 ```
 
-Configure AWS credentials
+Now that we installed all the requirements to run the logGenerator, we have to configure our Amazon AWS credentials in order to access our Amazon account from the SDK.
+
+### Configure AWS credentials
+
+From terminal run
 ```shell
 aws configure
 ```
+Configure the credentials accordling to your IAM roles
 ```shell
 AWS Access Key ID [None]: Your key
 AWS Secret Access Key [None]: Your key
 Default region name [None]: us-west-1
 Default output format [None]: json
 ```
+
+We are all set and ready to run our logGenerator
+
+```shell
+cd logGenerator/
+sbt clean compile
+sbt run
+```
+
+# lambda_functions
+
 ## Run locally
 
 Before running our APIs locally we have to install Docker

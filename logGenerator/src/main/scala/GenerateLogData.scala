@@ -70,17 +70,16 @@ object GenerateLogData:
       .withRegion(region) // The first region to try your request against
       .build();
 
-    System.out.println("***WRITING OBJECT TO S3")
+    logger.info("***WRITING OBJECT TO S3")
     val content = logLines.mkString(config.getString("randomLogGenerator.s3.newLine"))
     try  s3.putObject(bucketName, fileName, content)
     catch {
       case e: AmazonServiceException =>
-        System.out.println("ERROR S3")
-        System.err.println(e.getErrorMessage)
+        logger.error("ERROR S3")
+        logger.error(e.getErrorMessage)
       //System.exit(1)
     }
-
-    Thread.sleep(config.getLong("randomLogGenerator.s3.timePeriod")) // wait for 1000 millisecond
+    Thread.sleep(config.getLong("randomLogGenerator.s3.timePeriod")) // wait for timePeriod millisecond
     //Recursive call
     uploadS3Logs()
 
