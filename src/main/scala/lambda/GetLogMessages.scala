@@ -30,19 +30,20 @@ object GetLogMessages {
     val time = request.getPathParameters.get("time")
     val delta = request.getPathParameters.get("delta")
     //Read file from AWS S3 bucket
-    //val logFile = readFileFromS3()
-    val logFile = readFile("input.log")
+    val logFile = readFileFromS3()
     //Populate array buffer with file content
     val logTimeStampBuffer = ArrayBuffer[String]()
     logFile.foreach(token =>
       logTimeStampBuffer += token.toString.split(" ")(0))
     //Cast the array buffer to array
     val logTimeStampArray = logTimeStampBuffer.toArray
+    //Get the log messages detected using a binarySearch algorithm
     val deltaDetected = deltaHandler(logTimeStampArray, time, delta)
     val finalResponse = ArrayBuffer[String]()
     deltaDetected.foreach{
-      timeDetected => logFile.foreach(
-        logMessage => if(logMessage.contains(timeDetected)){
+      timeDetected =>
+        logFile.foreach(
+        logMessage => if(logMessage.toString.contains(timeDetected)){
           finalResponse += md5HashString(logMessage.toString)
         }
       )
@@ -83,11 +84,11 @@ object GetLogMessages {
     val timeSeconds = Integer.parseInt(time.split(":")(2).split("\\.")(0))
     val timeMillis = Integer.parseInt(time.split("\\.")(1))
     //Hours
-    val hoursIncrement = timeHours + deltaMinutes
-    val hoursDecrement = timeHours - deltaMinutes
+    val hoursIncrement = timeHours + deltaHours
+    val hoursDecrement = timeHours - deltaHours
     //Minutes
-    val minutesIncrement = timeMinutes + deltaHours
-    val minutesDecrement = timeMinutes - deltaHours
+    val minutesIncrement = timeMinutes + deltaMinutes
+    val minutesDecrement = timeMinutes - deltaMinutes
     //Seconds
     val secondsIncrement = timeSeconds + deltaSeconds
     val secondsDecrement = timeSeconds - deltaSeconds
@@ -141,7 +142,6 @@ object GetLogMessages {
       timeBuffer += millisDecremented
     }
       val timeFoundArray = timeBuffer.toArray
-      timeFoundArray.foreach(token => System.out.println(token))
     return timeBuffer.toArray
   }
 

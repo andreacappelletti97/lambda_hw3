@@ -22,6 +22,7 @@ public class ApiGatewayProxyHandler implements RequestHandler<APIGatewayProxyReq
      */
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent
                                                               requestEvent, Context context) {
+        System.out.println("handle this request!!!");
 
         //Detect gRPC request from the content type of the headers
            /*
@@ -39,7 +40,7 @@ public class ApiGatewayProxyHandler implements RequestHandler<APIGatewayProxyReq
                     .withStatusCode(response.statusCode())
                     .withHeaders(response.javaHeaders());
         } else if(requestEvent.getPath().contains("getLogMessages")){
-            System.out.println("Check log presence function is called");
+            System.out.println("Get log messages function is called");
             GetLogMessages.Response response = GetLogMessages.handle(requestEvent, context);
             return new APIGatewayProxyResponseEvent()
                     .withBody(response.body())

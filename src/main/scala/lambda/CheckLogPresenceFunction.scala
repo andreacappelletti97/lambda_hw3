@@ -29,16 +29,15 @@ object CheckLogPresenceFunction {
     val time = request.getPathParameters.get("time")
     val delta = request.getPathParameters.get("delta")
     //Read file from AWS S3 bucket
-    //val logFile = readFileFromS3()
-    val logFile = readFile("input.log")
+    val logFile = readFileFromS3()
+    //val logFile = readFile("input.log")
     //Populate array buffer with file content
     val logTimeStampBuffer = ArrayBuffer[String]()
     logFile.foreach(token =>
       logTimeStampBuffer += token.toString.split(" ")(0))
     //Cast the array buffer to array
     val logTimeStampArray = logTimeStampBuffer.toArray
-    deltaHandler(logTimeStampArray, time, delta)
-    val result = binarySearchTime(logTimeStampArray, time)
+    val result = deltaHandler(logTimeStampArray, time, delta)
     //Return result
     logger.info("Returning results...")
     Response(result.toString, Map("Content-Type" -> "text/plain"))
@@ -52,7 +51,7 @@ object CheckLogPresenceFunction {
     }
   }
 
-  def deltaHandler(timeArray: Array[String], time : String, delta: String): Unit ={
+  def deltaHandler(timeArray: Array[String], time : String, delta: String): Boolean = {
     //Split the delta into hours, minutes, seconds, millis
     val deltaHours = Integer.parseInt(delta.split(":")(0))
     val deltaMinutes = Integer.parseInt(delta.split(":")(1))
@@ -64,35 +63,64 @@ object CheckLogPresenceFunction {
     val timeSeconds = Integer.parseInt(time.split(":")(2).split("\\.")(0))
     val timeMillis = Integer.parseInt(time.split("\\.")(1))
     //Hours
-    val hoursIncrement = timeHours + deltaMinutes
-    val hoursDecrement = timeHours - deltaMinutes
+    val hoursIncrement = timeHours + deltaHours
+    val hoursDecrement = timeHours - deltaHours
     //Minutes
-    val minutesIncrement = timeMinutes + deltaHours
-    val minutesDecrement = timeMinutes - deltaHours
+    val minutesIncrement = timeMinutes + deltaMinutes
+    val minutesDecrement = timeMinutes - deltaMinutes
     //Seconds
     val secondsIncrement = timeSeconds + deltaSeconds
     val secondsDecrement = timeSeconds - deltaSeconds
     //Millis
     val millisIncrement = timeMillis + deltaMillis
     val millisDecrement = timeMillis - deltaMillis
+    //Compute increments and decrements
+    val hoursIncremented = formatAdapter(hoursIncrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val hoursDecremented = formatAdapter(hoursDecrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val minutesIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(minutesIncrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val minutesDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(minutesDecrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString)
+    val secondsIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsIncrement.toString)  +"."+ formatAdapter(timeMillis.toString)
+    val secondsDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsDecrement.toString) +"."+ formatAdapter(timeMillis.toString)
+    val millisIncremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisIncrement.toString)
+    val millisDecremented = formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisDecrement.toString)
 
+    //Check if the current timestamp is present
+    if(binarySearchTime(timeArray, time)){
+      return true;
+    }
     //Increment hours with delta
-    binarySearchTime(timeArray, formatAdapter(hoursIncrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaHours!=0 && binarySearchTime(timeArray, hoursIncremented)){
+      return true;
+    }
     //Decrement hours with delta
-    binarySearchTime(timeArray, formatAdapter(hoursDecrement.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaHours!=0 && binarySearchTime(timeArray, hoursDecremented)){
+      return true;
+    }
     //Increment minutes with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(minutesIncrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaMinutes!=0 && binarySearchTime(timeArray, minutesIncremented)){
+      return true;
+    }
     //Decrement minutes with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(minutesDecrement.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaMinutes!=0 && binarySearchTime(timeArray, minutesDecremented)){
+      return true;
+    }
     //Increment seconds with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsIncrement.toString)  +"."+ formatAdapter(timeMillis.toString))
+    if(deltaSeconds!=0 && binarySearchTime(timeArray, secondsIncremented)){
+      return true;
+    }
     //Decrement seconds with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(secondsDecrement.toString) +"."+ formatAdapter(timeMillis.toString))
+    if(deltaSeconds!=0 && binarySearchTime(timeArray, secondsDecremented)){
+      return true;
+    }
     //Increment millis with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisIncrement.toString))
+    if(deltaMillis!=0 && binarySearchTime(timeArray, millisIncremented)){
+      return true;
+    }
     //Decrement millis with delta
-    binarySearchTime(timeArray, formatAdapter(timeHours.toString)+":" +formatAdapter(timeMinutes.toString)+ ":" +formatAdapter(timeSeconds.toString) +"."+ formatAdapter(millisDecrement.toString))
-
+    if(deltaMillis!=0 && binarySearchTime(timeArray, millisDecremented)){
+      return true;
+    }
+    return false;
   }
 
 
