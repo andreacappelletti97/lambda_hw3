@@ -11,7 +11,7 @@ This repository is organized into three different subprojects.
 
 - logGenerator
 - lambda_functions
-- gRpc
+- Akka gRpc
 
 The following sections describe the functionalities implemented in all of them.
 
@@ -219,5 +219,39 @@ The policy should allow the access to your S3 bucket
 }
 ```
 
+# Akka gRpc
 
 
+
+Compile the project
+
+```shell
+sbt clean compile
+```
+
+## Start the gRPC server
+
+```shell
+sbt "runMain com.lambda.grpc.Server"
+```
+
+Response
+
+
+```shell
+[2021-11-01 18:18:13,188] [INFO] [akka.event.slf4j.Slf4jLogger] [Server-akka.actor.default-dispatcher-3] [] - Slf4jLogger started
+(gRPC server bound to {}:{},127.0.0.1,8080)
+```
+
+## Start the gRPC client and perform the request
+
+```shell
+sbt "runMain com.lambda.grpc.Client"
+```
+
+Response
+
+```shell
+Performing request: 01:10:40.134 and 00:00:03.000
+LogMessageReply({"found":true},UnknownFieldSet(Map()))
+```
