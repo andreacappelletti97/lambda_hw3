@@ -1,4 +1,4 @@
-name := "lambda_hw3"
+name := "lambda_functions"
 
 version := "0.1"
 
