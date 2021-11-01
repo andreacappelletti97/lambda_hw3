@@ -1,6 +1,6 @@
 
 
-name := "LogFileGenerator"
+name := "logGenerator"
 
 version := "0.1"
 
