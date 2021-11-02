@@ -11,7 +11,7 @@ This repository is organized into three different subprojects.
 
 - logGenerator
 - lambda_functions
-- gRpc
+- Akka gRpc
 
 The following sections describe the functionalities implemented in all of them.
 
@@ -123,7 +123,7 @@ Your IAM user should have access to the following permissions
 Refer to https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-permissions.html
 
 Moreover, you should generate a policy for your user in order to access and upload files on your
-S3 bucket. 
+S3 bucket.
 
 The policy will look like the following and in resource you should insert your S3 bucket ARN.
 ```json
@@ -158,26 +158,80 @@ sbt run
 
 ## Run locally
 
+Install SAM-CLI
+
+Follow the official tutorial based on your computer OS
+
+https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
+
+Install and configure AWS-CLI as explained in the logGenerator section.
+
 Before running our APIs locally we have to install Docker
 
+https://docs.docker.com/get-docker/
+
 Docker is a required dependency from Amazon AWS SAM-Cli
+
+Once you have set up the entire system, you can now run the API locally
+
+From the project root type
 
 ```shell
 sbt clean assembly && sam local start-api
 ```
 
+You will get all the endpoints
+
+```shell
+[success] Total time: 30 s, completed Nov 2, 2021 12:53:27 PM
+Mounting CheckLogPresencePostFunction at http://127.0.0.1:3000/checkLogPresence [POST]
+Mounting GetLogMessagesPostFunction at http://127.0.0.1:3000/getLogMessages [POST]
+Mounting CheckLogPresenceFunction at http://127.0.0.1:3000/checkLogPresence/{time}/{delta} [GET]
+Mounting GetLogMessagesFunction at http://127.0.0.1:3000/getLogMessages/{time}/{delta} [GET]
+You can now browse to the above endpoints to invoke your functions. You do not need to restart/reload SAM CLI while working on your functions, changes will be reflected instantly/automatically. You only need to restart SAM CLI if you update your AWS SAM template
+2021-11-02 12:53:29  * Running on http://127.0.0.1:3000/ (Press CTRL+C to quit)
+```
+
+Now we can test our APIs locally
 ## Testing locally
+
+
+
+## CheckLogPresencePostFunction
+REST request
+```shell
+curl -d "time=01:10:23.342&delta=00:00:02.000" -H  "Content-Type: application/x-www-form-urlencoded"   -X POST  http://127.0.0.1:3000/checkLogPresence
+```
+
+Response
+```shell
+"POST /checkLogPresence HTTP/1.1" 200  
+{"found":true}
+```
+
+## GetLogMessagesPostFunction
+REST request
+```shell
+curl -d "time=01:10:23.342&delta=00:00:02.000" -H  "Content-Type: application/x-www-form-urlencoded"   -X POST  http://127.0.0.1:3000/getLogMessage
+```
+
+Response
+```shell
+ "POST /getLogMessages HTTP/1.1" 200  
+{"found":true,"messages":["bb7dfc4aa6ae90646b7b94646252cf4"]}
+```
+
 
 ## CheckLogPresence function
 
 REST request
 ```shell
-curl  http://127.0.0.1:3000/checkLogPresence/01:10:40.134/00:00:03.000
+curl  http://127.0.0.1:3000/checkLogPresence/01:10:23.342/00:00:02.000
 ```
 Response
 ```shell
-"GET /checkLogPresence/01:10:40.134/00:00:03.000 HTTP/1.1" 200 
-true
+"GET /checkLogPresence/01:10:23.342/00:00:02.000 HTTP/1.1" 200
+{"found":true}
 ```
 
 ## GetLogMessages function
@@ -197,6 +251,8 @@ e7b222fdba96b61f7c8acabaf531a8ca
 ```shell
 sbt clean assembly && sam deploy --guided
 ```
+
+
 
 Add a new policy into the lambda function just created
 The policy should allow the access to your S3 bucket
@@ -219,5 +275,39 @@ The policy should allow the access to your S3 bucket
 }
 ```
 
+# Akka gRpc
 
 
+
+Compile the project
+
+```shell
+sbt clean compile
+```
+
+## Start the gRPC server
+
+```shell
+sbt "runMain com.lambda.grpc.Server"
+```
+
+Response
+
+
+```shell
+[2021-11-01 18:18:13,188] [INFO] [akka.event.slf4j.Slf4jLogger] [Server-akka.actor.default-dispatcher-3] [] - Slf4jLogger started
+(gRPC server bound to {}:{},127.0.0.1,8080)
+```
+
+## Start the gRPC client and perform the request
+
+```shell
+sbt "runMain com.lambda.grpc.Client"
+```
+
+Response
+
+```shell
+Performing request: 01:10:40.134 and 00:00:03.000
+LogMessageReply({"found":true},UnknownFieldSet(Map()))
+```

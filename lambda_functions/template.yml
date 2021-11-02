@@ -52,6 +52,52 @@ Resources:
           Properties:
             Path: /getLogMessages/{time}/{delta}
             Method: GET
+  GetLogMessagesPostFunction:
+    Type: AWS::Serverless::Function
+    package:
+      individually: true
+      exclude:
+        - aws-java-sdk
+    Properties:
+      FunctionName: GetLogMessagesPost
+      Description: Function to check the presence of the log given a timestamp and return MD5 log message with POST method
+      Runtime: java8
+      Handler: proxy.ApiGatewayProxyHandler
+      CodeUri: target/scala-3.0.2/acappe2_hw3.jar
+      MemorySize: 512
+      Timeout: 50
+      Environment:
+        Variables:
+          env: staging
+      Events:
+        Hello:
+          Type: Api
+          Properties:
+            Path: /getLogMessages
+            Method: POST
+  CheckLogPresencePostFunction:
+    Type: AWS::Serverless::Function
+    package:
+      individually: true
+      exclude:
+        - aws-java-sdk
+    Properties:
+      FunctionName: CheckLogPresencePost
+      Description: Function to check the presence of the log given a timestamp with POST method
+      Runtime: java8
+      Handler: proxy.ApiGatewayProxyHandler
+      CodeUri: target/scala-3.0.2/acappe2_hw3.jar
+      MemorySize: 512
+      Timeout: 50
+      Environment:
+        Variables:
+          env: staging
+      Events:
+        Hello:
+          Type: Api
+          Properties:
+            Path: /checkLogPresence
+            Method: POST
 
 Outputs:
   ApiURL:
