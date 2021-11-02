@@ -374,6 +374,11 @@ curl -d "time=${TIME}&delta=${DELTA}" -H  "Content-Type: application/x-www-form-
 
 ```
 
+## YouTube Video
+
+A video explanation is available at this url: https://youtu.be/-MzF5-z3wbc
+
+
 # Akka gRpc
 
 This project contains the gRPC client and server implementation.
