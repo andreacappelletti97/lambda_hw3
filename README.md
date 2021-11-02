@@ -313,7 +313,7 @@ Configuring SAM deploy
 
 
 The final result will look like
-![alt text](assets/lambda.png)
+![alt text](assets/lambdas.png)
 
 Once deployed we have to add a new policy into the lambda function just created.
 
