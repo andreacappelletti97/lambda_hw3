@@ -122,6 +122,9 @@ Your IAM user should have access to the following permissions
 
 Refer to https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-permissions.html
 
+The final result will look like this
+![alt text](assets/IAM_permissions.png)
+
 Moreover, you should generate a policy for your user in order to access and upload files on your
 S3 bucket.
 
@@ -462,4 +465,6 @@ While writing the simulations the following best practices has been adopted
 In order to produce the result obtained the following documents and paper have been consulted.
 
 - https://leanpub.com/edocc
+- https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-getting-started-set-up-credentials.html
+- https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-permissions.html
 
