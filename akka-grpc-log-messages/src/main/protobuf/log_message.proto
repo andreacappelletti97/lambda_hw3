@@ -1,25 +1,22 @@
-//#service-request-reply
 syntax = "proto3";
 
 option java_multiple_files = true;
 option java_package = "com.lambda.grpc";
 option java_outer_classname = "LogMessageProto";
 
-// The greeting service definition.
+// The LogMessage service definition.
 service LogMessageService {
-
     rpc checkLogPresence (LogMessageRequest) returns (LogMessageReply) {}
-
 }
 
-// The request message containing the user's name.
+// The request message containing the time and the delta
 message LogMessageRequest {
     string time = 1;
     string delta = 2;
 }
 
-// The response message containing the greetings
+// The response message containing the result either true or false
 message LogMessageReply {
     string found = 1;
 }
-//#service-request-reply
+

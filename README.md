@@ -371,9 +371,42 @@ curl -d "time=${TIME}&delta=${DELTA}" -H  "Content-Type: application/x-www-form-
 
 ```
 
-
 # Akka gRpc
 
+This project contains the gRPC client and server implementation.
+
+The client interacts with the server using protobuffers.
+
+In particular the protobuffer is defined as follow
+
+```java
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.lambda.grpc";
+option java_outer_classname = "LogMessageProto";
+
+// The LogMessage service definition.
+service LogMessageService {
+    rpc checkLogPresence (LogMessageRequest) returns (LogMessageReply) {}
+}
+
+// The request message containing the time and the delta
+message LogMessageRequest {
+    string time = 1;
+    string delta = 2;
+}
+
+// The response message containing the result either true or false
+message LogMessageReply {
+    string found = 1;
+}
+
+```
+
+The aim for this project is to perform a GET request at the checkLogMessage endpoint end return the results via RPC.
+
+The RPC Server takes the request, call the lambda function and returns the result via RPC.
 
 
 Compile the project
@@ -388,7 +421,7 @@ sbt clean compile
 sbt "runMain com.lambda.grpc.Server"
 ```
 
-Response
+You should be able to see on your shell
 
 
 ```shell
@@ -402,9 +435,31 @@ Response
 sbt "runMain com.lambda.grpc.Client"
 ```
 
-Response
+The response will contain the entire result of the API call
 
 ```shell
 Performing request: 01:10:40.134 and 00:00:03.000
 LogMessageReply({"found":true},UnknownFieldSet(Map()))
 ```
+
+## Programming technology
+All the projects have been written in Scala using a Functional Programming approach.
+
+While writing the simulations the following best practices has been adopted
+
+- Large usage of logging to understand the system status;
+
+
+- Configuration libraries and files to provide input values for the simulations;
+
+
+- No while or for loop is present, instead recursive functions are largely used into the project.
+
+
+- Modular architecture (code is divided by module to enhance maintainability)
+
+## References
+In order to produce the result obtained the following documents and paper have been consulted.
+
+- https://leanpub.com/edocc
+
