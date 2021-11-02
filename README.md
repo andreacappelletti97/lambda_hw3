@@ -310,6 +310,11 @@ Configuring SAM deploy
         SAM configuration environment [default]: 
 
 ```
+
+
+The final result will look like
+![alt text](assets/lambda.png)
+
 Once deployed we have to add a new policy into the lambda function just created.
 
 The policy should allow the access to your S3 bucket
@@ -373,6 +378,8 @@ printf "\nRunning ${ENDPOINT2} with POST request\n"
 curl -d "time=${TIME}&delta=${DELTA}" -H  "Content-Type: application/x-www-form-urlencoded"   -X POST  $BASE_URL/$ENDPOINT2
 
 ```
+
+
 
 ## YouTube Video
 
