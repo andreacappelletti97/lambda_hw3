@@ -128,19 +128,19 @@ S3 bucket.
 The policy will look like the following and in resource you should insert your S3 bucket ARN.
 ```json
 {
-"Version": "2012-10-17",
-"Statement": [
-{
-"Sid": "ExampleStmt",
-"Action": [
-"s3:PutObject"
-],
-"Effect": "Allow",
-"Resource": [
-"YOUR_S3_BUCKET_ARN/*"
-]
-}
-]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ExampleStmt",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "YOUR_S3_BUCKET_ARN/*"
+      ]
+    }
+  ]
 }
 ```
 
@@ -153,9 +153,39 @@ cd logGenerator/
 sbt clean compile
 sbt run
 ```
+## YouTube Video
+
+A video explanation is available at this url: https://youtu.be/UY3w5uYv1BY
 
 # lambda_functions
 
+YouTube video: 
+
+This project contains the lambda functions.
+
+It uses SAM stacks to deploy them on CloudFormation.
+
+In order to test them locally you may want to install Docket and setup the container.
+
+The API specification is written into the file <code>template.yml</code> in order to improve the scalability
+and maintainability over the time.
+
+There is an API Gateway Proxy that caputes the request and handle them base on their nature (GET/POST...).
+
+In this scenario I provide two endpoints, the first check the log timestamp and delta existance, the second
+once return the log messages in MD5 format if they do exist.
+
+In order to search into the log files, I use a binary search strategy, because they are ordered.
+
+In this way the results are computed with a time complexity of O(logN).
+
+The following sections explain how to test them locally and how to deploy them online and test them.
+
+The lambda functions are online and available at this address.
+
+<code>https://i89ssvhs3d.execute-api.us-west-1.amazonaws.com/Prod </code>
+
+To make requests follow the sections below.
 ## Run locally
 
 Install SAM-CLI
@@ -248,13 +278,37 @@ e7b222fdba96b61f7c8acabaf531a8ca
 
 ## Deploy in production on Amazon AWS
 
+
 ```shell
 sbt clean assembly && sam deploy --guided
 ```
+Follow the current configuration
+```shell
+Configuring SAM deploy
+======================
 
+        Looking for config file [samconfig.toml] :  Found
+        Reading default arguments  :  Success
 
+        Setting default arguments for 'sam deploy'
+        =========================================
+        Stack Name [sam-app]: 
+        AWS Region [us-west-1]: 
+        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
+        Confirm changes before deploy [y/N]: 
+        #SAM needs permission to be able to create roles to connect to the resources in your template
+        Allow SAM CLI IAM role creation [Y/n]:  
+        CheckLogPresenceFunction may not have authorization defined, Is this okay? [y/N]: Y
+        GetLogMessagesFunction may not have authorization defined, Is this okay? [y/N]: Y
+        GetLogMessagesPostFunction may not have authorization defined, Is this okay? [y/N]: Y
+        CheckLogPresencePostFunction may not have authorization defined, Is this okay? [y/N]: Y
+        Save arguments to configuration file [Y/n]: 
+        SAM configuration file [samconfig.toml]: 
+        SAM configuration environment [default]: 
 
-Add a new policy into the lambda function just created
+```
+Once deployed we have to add a new policy into the lambda function just created.
+
 The policy should allow the access to your S3 bucket
 
 ```json
@@ -274,6 +328,49 @@ The policy should allow the access to your S3 bucket
   ]
 }
 ```
+
+In the YouTube video I detailed explain how to do that.
+
+You can test the same lambda functions API using the curl commands in the previous section and
+with the endpoint 
+
+<code>https://i89ssvhs3d.execute-api.us-west-1.amazonaws.com/Prod </code>
+
+I coded a bash script in order to execute all the API requests and test them.
+
+The code is in the lambda_functions project directory, in order to execute it run
+
+```shell
+chmod +x testApi.sh
+./testApi.sh
+```
+
+The code is the following
+
+```bash
+#Define base API URL
+BASE_URL="https://i89ssvhs3d.execute-api.us-west-1.amazonaws.com/Prod"
+
+#Define endpoints
+ENDPOINT1="getLogMessages"
+ENDPOINT2="checkLogPresence"
+
+#Define params
+TIME="01:10:23.342"
+DELTA="00:00:02.000"
+
+#Run CURL to test the endpoints
+printf "Running ${ENDPOINT1} with GET request\n"
+curl  $BASE_URL/$ENDPOINT1/$TIME/$DELTA
+printf "\nRunning ${ENDPOINT2} with GET request\n"
+curl  $BASE_URL/$ENDPOINT2/$TIME/$DELTA
+printf "\nRunning ${ENDPOINT1} with POST request\n"
+curl -d "time=${TIME}&delta=${DELTA}" -H  "Content-Type: application/x-www-form-urlencoded"   -X POST  $BASE_URL/$ENDPOINT1
+printf "\nRunning ${ENDPOINT2} with POST request\n"
+curl -d "time=${TIME}&delta=${DELTA}" -H  "Content-Type: application/x-www-form-urlencoded"   -X POST  $BASE_URL/$ENDPOINT2
+
+```
+
 
 # Akka gRpc
 
