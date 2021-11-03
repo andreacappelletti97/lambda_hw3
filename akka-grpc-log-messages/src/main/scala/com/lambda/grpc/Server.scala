@@ -39,6 +39,11 @@ object Server {
 
 class Server(system: ActorSystem[_]) {
 
+  object Config {
+    val conf = ConfigFactory.load()
+    def apply() = conf
+  }
+
   def run(): Future[Http.ServerBinding] = {
     implicit val sys = system
     implicit val ec: ExecutionContext = system.executionContext
@@ -47,7 +52,7 @@ class Server(system: ActorSystem[_]) {
       LogMessageServiceHandler(new ServiceImpl(system))
 
     val bound: Future[Http.ServerBinding] = Http(system)
-      .newServerAt(interface = "127.0.0.1", port = 8080)
+      .newServerAt(interface = Config().getString("akka.grpc.client.host"), port = Config().getInt("akka.grpc.client.port"))
       .enableHttps(serverHttpContext)
       .bind(service)
       .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))

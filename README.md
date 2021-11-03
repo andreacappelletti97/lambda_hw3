@@ -457,6 +457,8 @@ Performing request: 01:10:40.134 and 00:00:03.000
 LogMessageReply({"found":true},UnknownFieldSet(Map()))
 ```
 
+The project structure is taken from the official documentation of Akka: https://doc.akka.io/docs/akka-grpc/current/index.html
+
 ## Programming technology
 All the projects have been written in Scala using a Functional Programming approach.
 
@@ -479,4 +481,5 @@ In order to produce the result obtained the following documents and paper have b
 - https://leanpub.com/edocc
 - https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-getting-started-set-up-credentials.html
 - https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-permissions.html
+- https://doc.akka.io/docs/akka-grpc/current/index.html
 
